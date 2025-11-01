@@ -4,7 +4,16 @@ A command-line tool for unpacking Unity Package (`.unitypackage`) files.
 
 ## Description
 
-Unity Package files are special gzipped tar archives used by Unity to package and distribute assets. This tool provides a simple command-line interface to extract these packages to a directory of your choice.
+Unity Package files are special gzipped tar archives used by Unity to package and distribute assets. This tool extracts these packages and **reconstructs the original Unity project structure**, placing assets in their proper folders (e.g., `Assets/Scripts/`, `Assets/Prefabs/`) instead of leaving them in GUID-named directories.
+
+### How it works
+
+Unity packages store assets in GUID-named folders, each containing:
+- `asset` - The actual file content
+- `pathname` - The original Unity project path
+- `asset.meta` - Unity metadata
+
+This tool reads the `pathname` files and reconstructs the complete directory structure, making it easy to browse, modify, or integrate the extracted assets into your Unity projects.
 
 ## Installation
 

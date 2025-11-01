@@ -44,13 +44,15 @@ describe('Unity Package Unpacker Integration Tests', () => {
       
       await unpackUnityPackage(testPackagePath, testOutputDir, false);
       
-      // Check that GUID directories exist
-      const expectedDirs = ['guid1', 'guid2'];
-      const hasExpectedStructure = expectedDirs.every(dir => 
-        getAllFilesInDirectory(testOutputDir).some(file => file.startsWith(dir)),
-      );
+      // Check that the Assets directory structure was reconstructed
+      const assetsDir = path.join(testOutputDir, 'Assets');
+      expect(fs.existsSync(assetsDir)).toBe(true);
       
-      expect(hasExpectedStructure).toBe(true);
+      // Check for expected subdirectories
+      const scriptsDir = path.join(assetsDir, 'Scripts');
+      const prefabsDir = path.join(assetsDir, 'Prefabs');
+      expect(fs.existsSync(scriptsDir)).toBe(true);
+      expect(fs.existsSync(prefabsDir)).toBe(true);
     });
 
     it('should extract with verbose logging enabled', async () => {
@@ -100,8 +102,13 @@ describe('Unity Package Unpacker Integration Tests', () => {
       
       await unpackUnityPackage(testPackagePath, testOutputDir, false);
       
-      // Verify specific files exist
-      const expectedFiles = SAMPLE_UNITY_PACKAGE_STRUCTURE.map(f => f.path);
+      // Verify specific files exist in the reconstructed structure
+      const expectedFiles = [
+        'Assets/Scripts/MyScript.cs',
+        'Assets/Scripts/MyScript.cs.meta',
+        'Assets/Prefabs/MyPrefab.prefab',
+        'Assets/Prefabs/MyPrefab.prefab.meta',
+      ];
       const hasAllFiles = verifyExtractedFiles(testOutputDir, expectedFiles);
       
       expect(hasAllFiles).toBe(true);
