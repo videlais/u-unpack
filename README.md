@@ -1,4 +1,4 @@
-# unity-unpack
+# u-unpack
 
 A command-line tool for unpacking Unity Package (`.unitypackage`) files.
 
