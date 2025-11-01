@@ -13,7 +13,7 @@ import * as tar from 'tar';
  */
 export async function createMockUnityPackage(
   filePath: string,
-  files: Array<{ path: string; content: string }> = []
+  files: Array<{ path: string; content: string }> = [],
 ): Promise<void> {
   const tempDir = path.join(path.dirname(filePath), '.temp-unity-package');
   
@@ -40,7 +40,7 @@ export async function createMockUnityPackage(
         file: filePath,
         cwd: tempDir,
       },
-      fs.readdirSync(tempDir)
+      fs.readdirSync(tempDir),
     );
   } finally {
     // Clean up temporary directory
@@ -86,7 +86,7 @@ export function createTempDirectory(prefix: string = 'test-'): string {
  */
 export function verifyExtractedFiles(
   directory: string,
-  expectedFiles: string[]
+  expectedFiles: string[],
 ): boolean {
   return expectedFiles.every(file => {
     const fullPath = path.join(directory, file);
@@ -102,7 +102,7 @@ export function verifyExtractedFiles(
  */
 export function getAllFilesInDirectory(
   directory: string,
-  baseDir: string = directory
+  baseDir: string = directory,
 ): string[] {
   const files: string[] = [];
   

@@ -150,7 +150,7 @@ describe('Unity Package Unpacker', () => {
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
         await expect(unpackUnityPackage(testFile, outputDir, true)).rejects.toThrow(
-          'Failed to extract Unity package'
+          'Failed to extract Unity package',
         );
 
         expect(consoleErrorSpy).toHaveBeenCalledWith('Extraction failed:', expect.any(Error));

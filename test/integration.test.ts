@@ -47,7 +47,7 @@ describe('Unity Package Unpacker Integration Tests', () => {
       // Check that GUID directories exist
       const expectedDirs = ['guid1', 'guid2'];
       const hasExpectedStructure = expectedDirs.every(dir => 
-        getAllFilesInDirectory(testOutputDir).some(file => file.startsWith(dir))
+        getAllFilesInDirectory(testOutputDir).some(file => file.startsWith(dir)),
       );
       
       expect(hasExpectedStructure).toBe(true);
@@ -58,7 +58,7 @@ describe('Unity Package Unpacker Integration Tests', () => {
       
       // This should not throw and should complete successfully
       await expect(
-        unpackUnityPackage(testPackagePath, testOutputDir, true)
+        unpackUnityPackage(testPackagePath, testOutputDir, true),
       ).resolves.not.toThrow();
     });
   });

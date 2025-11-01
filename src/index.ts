@@ -7,7 +7,7 @@ import * as fs from 'fs';
 
 export async function handleUnpack(
   input: string,
-  options: { output: string; verbose: boolean }
+  options: { output: string; verbose: boolean },
 ): Promise<void> {
   // Validate input file
   if (!fs.existsSync(input)) {

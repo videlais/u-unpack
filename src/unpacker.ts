@@ -12,7 +12,7 @@ import * as tar from 'tar';
 export async function unpackUnityPackage(
   inputPath: string,
   outputPath: string,
-  verbose: boolean = false
+  verbose: boolean = false,
 ): Promise<void> {
   if (verbose) {
     console.log('Starting Unity package extraction...');
@@ -35,7 +35,7 @@ export async function unpackUnityPackage(
         if (verbose) {
           console.log(`Extracting: ${entry.path}`);
         }
-      }
+      },
     });
 
     if (verbose) {
