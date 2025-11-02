@@ -8,7 +8,13 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:web": "webpack --mode production",
+    "dev:web": "webpack serve --mode development",
     "test": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm run test && npm run test:e2e",
     "lint": "eslint . --ext .ts --fix",
     "clean": "rimraf test/integration-test-* src/integration-test-* guid1 guid2 Assets",
     "all": "npm run lint && npm run build && npm run test && npm run clean"
@@ -25,20 +31,32 @@
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "@jest/globals": "^30.2.0",
+    "@playwright/test": "^1.56.1",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.9.2",
+    "@types/pako": "^2.0.4",
     "@types/tar": "^6.1.13",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^13.0.1",
     "eslint": "^9.39.0",
+    "html-webpack-plugin": "^5.6.4",
     "jest": "^30.2.0",
+    "path-browserify": "^1.0.1",
     "rimraf": "^6.1.0",
+    "stream-browserify": "^3.0.0",
     "ts-jest": "^29.4.5",
+    "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.2"
+    "typescript-eslint": "^8.46.2",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2"
   },
   "dependencies": {
     "commander": "^14.0.2",
+    "pako": "^2.1.0",
     "tar": "^7.5.2"
   },
   "engines": {

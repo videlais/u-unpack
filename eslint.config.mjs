@@ -24,9 +24,13 @@ export default tseslint.config(
       'coverage/**',
       'node_modules/**',
       'jest.config.js',
+      'webpack.config.js',
       'eslint.config.mjs',
+      'docs/**',
       'test/integration-test-*/**',
       'test/test-[0-9]*/**',
+      'playwright-report/**',
+      'test-results/**',
     ],
   }
 );

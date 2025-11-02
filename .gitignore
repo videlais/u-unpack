@@ -16,6 +16,9 @@ coverage/
 test/integration-test-*/
 test/test-[0-9]*/
 test/**/test-[0-9]*/
+playwright-report/
+test-results/
+playwright/.cache/
 
 # IDE
 .idea/
