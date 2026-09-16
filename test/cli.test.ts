@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -22,7 +22,7 @@ describe('CLI Integration Tests', () => {
 
   const runCLI = (args: string[]): Promise<{ stdout: string; stderr: string; exitCode: number | null }> => {
     return new Promise((resolve) => {
-      const child = spawn('node', ['dist/index.js', ...args]);
+      const child = spawn('bun', ['src/index.ts', ...args]);
       let stdout = '';
       let stderr = '';
 

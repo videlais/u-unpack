@@ -1,0 +1,4 @@
+[test]
+# Coverage is reported via lcov (consumed by Codecov) and a text summary.
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"

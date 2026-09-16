@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { unpackUnityPackage } from '../src/unpacker';
 import {
   createMockUnityPackage,
@@ -61,7 +61,7 @@ describe('Unity Package Unpacker Integration Tests', () => {
       // This should not throw and should complete successfully
       await expect(
         unpackUnityPackage(testPackagePath, testOutputDir, true),
-      ).resolves.not.toThrow();
+      ).resolves.toBeUndefined();
     });
   });
 

@@ -10,9 +10,9 @@ describe('Web Unpacker', () => {
       // This test documents the API shape
       // Actual functional testing is done via the handleFileUpload tests
       const result = {
-        fileCount: expect.any(Number),
-        files: expect.any(Array),
-        structure: expect.any(Array),
+        fileCount: 0,
+        files: [],
+        structure: [],
       };
       
       expect(result).toEqual({

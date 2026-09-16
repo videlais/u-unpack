@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
 import { unpackUnityPackage, isValidUnityPackage } from '../src/unpacker';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -147,7 +147,7 @@ describe('Unity Package Unpacker', () => {
         // Create an invalid tar file
         fs.writeFileSync(testFile, 'not a valid tar file');
 
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {});
 
         await expect(unpackUnityPackage(testFile, outputDir, true)).rejects.toThrow(
           'Failed to extract Unity package',
