@@ -13,7 +13,8 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "moduleResolution": "nodenext"
+    "moduleResolution": "nodenext",
+    "types": ["node"]
   },
   "include": ["src/**/*", "test/index.test.ts", "test/integration.test.ts", "test/unpacker.test.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
