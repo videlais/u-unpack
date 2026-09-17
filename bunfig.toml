@@ -1,0 +1,6 @@
+[test]
+# Coverage is reported via lcov (consumed by Codecov and scripts/check-coverage.mjs)
+# and a text summary. The regression floor is enforced by scripts/check-coverage.mjs
+# because Bun's built-in coverageThreshold is per-file only.
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"

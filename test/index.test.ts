@@ -1,28 +1,45 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, afterAll, mock, spyOn, type Mock } from 'bun:test';
 import { Command } from 'commander';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createProgram, handleUnpack } from '../src/index';
 import { createMockUnityPackage, cleanupTestFiles, SAMPLE_UNITY_PACKAGE_STRUCTURE } from './test-helpers';
+import * as realUnpacker from '../src/unpacker';
 
-// Mock the unpacker module
-jest.mock('../src/unpacker', () => ({
-  unpackUnityPackage: jest.fn(async () => Promise.resolve()),
+// Capture the real implementations before mocking so they can be restored.
+// Bun's mock.module is process-global, so it must be reverted after this file
+// runs or it would leak into the other test files.
+const realUnpackUnityPackage = realUnpacker.unpackUnityPackage;
+const realIsValidUnityPackage = realUnpacker.isValidUnityPackage;
+
+const unpackUnityPackageMock = mock(async () => Promise.resolve());
+
+mock.module('../src/unpacker', () => ({
+  unpackUnityPackage: unpackUnityPackageMock,
+  isValidUnityPackage: realIsValidUnityPackage,
 }));
+
+const { createProgram, handleUnpack, main } = await import('../src/index');
+
+afterAll(() => {
+  mock.module('../src/unpacker', () => ({
+    unpackUnityPackage: realUnpackUnityPackage,
+    isValidUnityPackage: realIsValidUnityPackage,
+  }));
+});
 
 describe('Unity Unpack CLI', () => {
   const testDir = path.join(__dirname, 'index-test-artifacts');
-  let consoleLogSpy: jest.SpiedFunction<typeof console.log>;
-  let consoleErrorSpy: jest.SpiedFunction<typeof console.error>;
-  let consoleWarnSpy: jest.SpiedFunction<typeof console.warn>;
-  let processExitSpy: jest.SpiedFunction<typeof process.exit>;
+  let consoleLogSpy: Mock<typeof console.log>;
+  let consoleErrorSpy: Mock<typeof console.error>;
+  let consoleWarnSpy: Mock<typeof console.warn>;
+  let processExitSpy: Mock<typeof process.exit>;
 
   beforeEach(() => {
     fs.mkdirSync(testDir, { recursive: true });
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    processExitSpy = jest.spyOn(process, 'exit').mockImplementation((() => {}) as never);
+    consoleLogSpy = spyOn(console, 'log').mockImplementation(() => {});
+    consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {});
+    consoleWarnSpy = spyOn(console, 'warn').mockImplementation(() => {});
+    processExitSpy = spyOn(process, 'exit').mockImplementation((() => {}) as never);
   });
 
   afterEach(() => {
@@ -123,6 +140,61 @@ describe('Unity Unpack CLI', () => {
       });
     });
   });
+
+  describe('createProgram action handler', () => {
+    let testFile: string;
+    let outputDir: string;
+
+    beforeEach(() => {
+      testFile = path.join(testDir, 'action.unitypackage');
+      outputDir = path.join(testDir, 'action-output');
+      fs.writeFileSync(testFile, 'dummy');
+    });
+
+    it('should run handleUnpack when the action is invoked', async () => {
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Unity package unpacked successfully');
+    });
+
+    it('should report errors thrown during unpacking and exit with code 1', async () => {
+      unpackUnityPackageMock.mockImplementationOnce(async () => {
+        throw new Error('boom');
+      });
+
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error unpacking Unity package:', 'boom');
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should stringify non-Error throws in the action handler', async () => {
+      unpackUnityPackageMock.mockImplementationOnce(async () => {
+        throw 'plain string failure';
+      });
+
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error unpacking Unity package:', 'plain string failure');
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('main', () => {
+    it('should create the program and parse the provided arguments', async () => {
+      const testFile = path.join(testDir, 'main.unitypackage');
+      const outputDir = path.join(testDir, 'main-output');
+      fs.writeFileSync(testFile, 'dummy');
+
+      main(['node', 'unity-unpack', testFile, '-o', outputDir]);
+      await new Promise(resolve => setImmediate(resolve));
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Unity package unpacked successfully');
+    });
+  });
 });
 
 // We'll test the CLI indirectly by importing and testing the command structure
@@ -154,10 +226,10 @@ describe('Unity Unpack CLI', () => {
 
   describe('command-line argument parsing', () => {
     let program: Command;
-    let mockAction: jest.MockedFunction<(..._args: unknown[]) => void>;
+    let mockAction: Mock<(..._args: unknown[]) => void>;
 
     beforeEach(() => {
-      mockAction = jest.fn() as jest.MockedFunction<(..._args: unknown[]) => void>;
+      mockAction = mock(() => {}) as Mock<(..._args: unknown[]) => void>;
       program = new Command();
       program
         .name('unity-unpack')

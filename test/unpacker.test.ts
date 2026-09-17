@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
 import { unpackUnityPackage, isValidUnityPackage } from '../src/unpacker';
+import { createMockUnityPackage } from './test-helpers';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -147,7 +148,7 @@ describe('Unity Package Unpacker', () => {
         // Create an invalid tar file
         fs.writeFileSync(testFile, 'not a valid tar file');
 
-        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleErrorSpy = spyOn(console, 'error').mockImplementation(() => {});
 
         await expect(unpackUnityPackage(testFile, outputDir, true)).rejects.toThrow(
           'Failed to extract Unity package',
@@ -155,6 +156,24 @@ describe('Unity Package Unpacker', () => {
 
         expect(consoleErrorSpy).toHaveBeenCalledWith('Extraction failed:', expect.any(Error));
         consoleErrorSpy.mockRestore();
+      });
+    });
+
+    describe('when a GUID folder has no pathname', () => {
+      it('should skip it and log the skip when verbose is enabled', async () => {
+        const pkg = path.join(testDir, 'no-pathname.unitypackage');
+        await createMockUnityPackage(pkg, [
+          { path: 'orphanguid/asset', content: 'asset without a pathname' },
+        ]);
+
+        const consoleLogSpy = spyOn(console, 'log').mockImplementation(() => {});
+
+        await unpackUnityPackage(pkg, outputDir, true);
+
+        expect(consoleLogSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Skipping orphanguid: no pathname file'),
+        );
+        consoleLogSpy.mockRestore();
       });
     });
 

@@ -7,6 +7,8 @@ yarn-error.log*
 # Build output
 dist/
 *.tsbuildinfo
+*.bun-build
+.*.bun-build
 
 # Testing
 coverage/
