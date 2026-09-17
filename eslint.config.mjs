@@ -25,6 +25,7 @@ export default tseslint.config(
       'node_modules/**',
       'webpack.config.js',
       'eslint.config.mjs',
+      'scripts/**',
       'docs/**',
       'test/integration-test-*/**',
       'test/test-[0-9]*/**',

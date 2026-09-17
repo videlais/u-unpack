@@ -63,8 +63,12 @@ export function createProgram(): Command {
   return program;
 }
 
+export function main(argv?: readonly string[]): void {
+  const program = createProgram();
+  program.parse(argv);
+}
+
 // Only run if executed directly (not imported)
 if (require.main === module) {
-  const program = createProgram();
-  program.parse();
+  main();
 }

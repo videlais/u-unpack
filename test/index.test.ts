@@ -11,12 +11,14 @@ import * as realUnpacker from '../src/unpacker';
 const realUnpackUnityPackage = realUnpacker.unpackUnityPackage;
 const realIsValidUnityPackage = realUnpacker.isValidUnityPackage;
 
+const unpackUnityPackageMock = mock(async () => Promise.resolve());
+
 mock.module('../src/unpacker', () => ({
-  unpackUnityPackage: mock(async () => Promise.resolve()),
+  unpackUnityPackage: unpackUnityPackageMock,
   isValidUnityPackage: realIsValidUnityPackage,
 }));
 
-const { createProgram, handleUnpack } = await import('../src/index');
+const { createProgram, handleUnpack, main } = await import('../src/index');
 
 afterAll(() => {
   mock.module('../src/unpacker', () => ({
@@ -136,6 +138,61 @@ describe('Unity Unpack CLI', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('does not exist'));
         expect(processExitSpy).toHaveBeenCalledWith(1);
       });
+    });
+  });
+
+  describe('createProgram action handler', () => {
+    let testFile: string;
+    let outputDir: string;
+
+    beforeEach(() => {
+      testFile = path.join(testDir, 'action.unitypackage');
+      outputDir = path.join(testDir, 'action-output');
+      fs.writeFileSync(testFile, 'dummy');
+    });
+
+    it('should run handleUnpack when the action is invoked', async () => {
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Unity package unpacked successfully');
+    });
+
+    it('should report errors thrown during unpacking and exit with code 1', async () => {
+      unpackUnityPackageMock.mockImplementationOnce(async () => {
+        throw new Error('boom');
+      });
+
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error unpacking Unity package:', 'boom');
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+
+    it('should stringify non-Error throws in the action handler', async () => {
+      unpackUnityPackageMock.mockImplementationOnce(async () => {
+        throw 'plain string failure';
+      });
+
+      const program = createProgram();
+      await program.parseAsync(['node', 'unity-unpack', testFile, '-o', outputDir]);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error unpacking Unity package:', 'plain string failure');
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('main', () => {
+    it('should create the program and parse the provided arguments', async () => {
+      const testFile = path.join(testDir, 'main.unitypackage');
+      const outputDir = path.join(testDir, 'main-output');
+      fs.writeFileSync(testFile, 'dummy');
+
+      main(['node', 'unity-unpack', testFile, '-o', outputDir]);
+      await new Promise(resolve => setImmediate(resolve));
+
+      expect(consoleLogSpy).toHaveBeenCalledWith('✓ Unity package unpacked successfully');
     });
   });
 });
