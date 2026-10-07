@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import * as fs from 'fs';
 import * as path from 'path';
-import pako from 'pako';
+import { gzip, ungzip } from 'pako';
 import { unpackUnityPackageWeb } from '../src/web/unpacker-web';
 import { createMockUnityPackage, cleanupTestFiles, SAMPLE_UNITY_PACKAGE_STRUCTURE } from './test-helpers';
 
@@ -108,7 +108,7 @@ describe('Web Unpacker', () => {
       // Prepend a 512-byte header block whose name field is all spaces. It is
       // non-zero (so it is not treated as the end-of-archive marker) yet decodes
       // to an empty name after trimming, exercising the empty-name skip branch.
-      const validTar = pako.ungzip(new Uint8Array(packageBuffer));
+      const validTar = ungzip(new Uint8Array(packageBuffer));
       const emptyHeader = new Uint8Array(512);
       emptyHeader.fill(0x20, 0, 100);
 
@@ -116,7 +116,7 @@ describe('Web Unpacker', () => {
       combined.set(emptyHeader, 0);
       combined.set(validTar, emptyHeader.length);
 
-      const regz = pako.gzip(combined);
+      const regz = gzip(combined);
       const buffer = regz.buffer.slice(regz.byteOffset, regz.byteOffset + regz.byteLength) as ArrayBuffer;
 
       const result = await unpackUnityPackageWeb(buffer);

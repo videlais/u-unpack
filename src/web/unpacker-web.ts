@@ -1,4 +1,4 @@
-import pako from 'pako';
+import { ungzip } from 'pako';
 
 /**
  * Browser-compatible Unity Package unpacker
@@ -82,7 +82,7 @@ export async function unpackUnityPackageWeb(arrayBuffer: ArrayBuffer): Promise<U
 
   // Decompress gzip
   const compressed = new Uint8Array(arrayBuffer);
-  const decompressed = pako.ungzip(compressed);
+  const decompressed = ungzip(compressed);
 
   // Parse TAR archive
   const entries = parseTar(decompressed);
