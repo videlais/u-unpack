@@ -45,7 +45,7 @@
     "@types/pako": "^2.0.4",
     "@types/tar": "^6.1.13",
     "@typescript-eslint/eslint-plugin": "^8.72.1",
-    "@typescript-eslint/parser": "^8.71.2",
+    "@typescript-eslint/parser": "^8.72.1",
     "buffer": "^6.0.3",
     "copy-webpack-plugin": "^14.0.0",
     "eslint": "^9.39.5",
