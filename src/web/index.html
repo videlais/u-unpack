@@ -395,25 +395,39 @@
 
             // Display tree structure
             const treeView = document.getElementById('treeView');
-            treeView.innerHTML = result.structure.map(path => 
-                `<div class="tree-item">${path}</div>`
-            ).join('');
+            treeView.replaceChildren(...result.structure.map(directoryPath => {
+                const item = document.createElement('div');
+                item.className = 'tree-item';
+                item.textContent = directoryPath;
+                return item;
+            }));
 
             // Display file list
             const fileList = document.getElementById('fileList');
-            fileList.innerHTML = result.files
-                .filter(f => !f.isMetaFile)
-                .map(file => `
-                    <div class="file-item">
-                        <span class="file-name">${file.path}</span>
-                        <div>
-                            <span class="file-size">${formatSize(file.content.length)}</span>
-                            <button class="download-btn" onclick="downloadFile('${file.path}', ${file.content.length})">
-                                Download
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+            fileList.replaceChildren(...result.files
+                .filter(file => !file.isMetaFile)
+                .map(file => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+
+                    const name = document.createElement('span');
+                    name.className = 'file-name';
+                    name.textContent = file.path;
+
+                    const details = document.createElement('div');
+                    const size = document.createElement('span');
+                    size.className = 'file-size';
+                    size.textContent = formatSize(file.content.length);
+
+                    const button = document.createElement('button');
+                    button.className = 'download-btn';
+                    button.textContent = 'Download';
+                    button.addEventListener('click', () => downloadFile(file.path, file.content.length));
+
+                    details.append(size, button);
+                    item.append(name, details);
+                    return item;
+                }));
         }
 
         function formatSize(bytes) {

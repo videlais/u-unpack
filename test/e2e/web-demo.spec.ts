@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
+import { createMockUnityPackage } from '../test-helpers';
 
 test.describe('Unity Package Unpacker Web Demo', () => {
   test('should load the demo page', async ({ page }) => {
@@ -124,6 +127,28 @@ test.describe('Unity Package Unpacker Web Demo', () => {
     
     // Check for specific file name
     await expect(page.locator('.file-name')).toContainText('Assets');
+  });
+
+  test('should render package paths as text rather than HTML', async ({ page }) => {
+    const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'u-unpack-web-xss-'));
+    const packagePath = path.join(testDir, 'crafted.unitypackage');
+    const pathname = 'Assets/<img src=x onerror=alert(1)>.txt';
+
+    try {
+      await createMockUnityPackage(packagePath, [
+        { path: 'guid/pathname', content: pathname },
+        { path: 'guid/asset', content: 'test content' },
+      ]);
+
+      await page.goto('/');
+      await page.locator('#fileInput').setInputFiles(packagePath);
+      await expect(page.locator('#results')).toBeVisible({ timeout: 10000 });
+
+      await expect(page.locator('.file-name')).toHaveText(pathname);
+      await expect(page.locator('#fileList img, #treeView img')).toHaveCount(0);
+    } finally {
+      fs.rmSync(testDir, { recursive: true, force: true });
+    }
   });
 
   test('should display footer with GitHub link', async ({ page }) => {
