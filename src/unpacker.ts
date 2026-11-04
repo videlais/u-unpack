@@ -2,6 +2,48 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tar from 'tar';
 
+function isWithinDirectory(directory: string, candidate: string): boolean {
+  const relativePath = path.relative(directory, candidate);
+  return relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath));
+}
+
+function resolvePackagePath(outputPath: string, originalPath: string): string {
+  const resolvedOutputPath = path.resolve(outputPath);
+  const targetPath = path.resolve(resolvedOutputPath, originalPath);
+
+  if (
+    !originalPath ||
+    path.isAbsolute(originalPath) ||
+    !isWithinDirectory(resolvedOutputPath, targetPath)
+  ) {
+    throw new Error(`Package pathname is outside the output directory: ${originalPath}`);
+  }
+
+  return targetPath;
+}
+
+function assertSafeDestination(outputPath: string, targetPath: string): void {
+  const realOutputPath = fs.realpathSync(outputPath);
+  const realTargetDirectory = fs.realpathSync(path.dirname(targetPath));
+
+  if (!isWithinDirectory(realOutputPath, realTargetDirectory)) {
+    throw new Error(`Package pathname resolves outside the output directory: ${targetPath}`);
+  }
+
+  try {
+    if (fs.lstatSync(targetPath).isSymbolicLink()) {
+      throw new Error(`Refusing to overwrite symbolic link: ${targetPath}`);
+    }
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+      throw error;
+    }
+  }
+}
+
 /**
  * Extracts a Unity Package file (.unitypackage) to the specified output directory.
  * Unity packages are special tar.gz files containing assets in a specific structure.
@@ -65,7 +107,7 @@ export async function unpackUnityPackage(
 
       // Read the original pathname
       const originalPath = fs.readFileSync(pathnamePath, 'utf-8').trim();
-      const targetPath = path.join(outputPath, originalPath);
+      const targetPath = resolvePackagePath(outputPath, originalPath);
       const targetDir = path.dirname(targetPath);
 
       // Create the directory structure
@@ -73,6 +115,7 @@ export async function unpackUnityPackage(
 
       // Copy the asset file if it exists
       if (fs.existsSync(assetPath)) {
+        assertSafeDestination(outputPath, targetPath);
         fs.copyFileSync(assetPath, targetPath);
         filesProcessed++;
         
@@ -83,7 +126,9 @@ export async function unpackUnityPackage(
 
       // Copy the .meta file if it exists
       if (fs.existsSync(metaPath)) {
-        fs.copyFileSync(metaPath, `${targetPath}.meta`);
+        const metaTargetPath = `${targetPath}.meta`;
+        assertSafeDestination(outputPath, metaTargetPath);
+        fs.copyFileSync(metaPath, metaTargetPath);
         
         if (verbose) {
           console.log(`Restored: ${originalPath}.meta`);

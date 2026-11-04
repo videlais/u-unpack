@@ -177,6 +177,39 @@ describe('Unity Package Unpacker', () => {
       });
     });
 
+    describe('when a pathname escapes the output directory', () => {
+      it('should reject the package without writing outside the output directory', async () => {
+        const pkg = path.join(testDir, 'path-traversal.unitypackage');
+        const outsidePath = path.join(testDir, 'escaped.txt');
+        await createMockUnityPackage(pkg, [
+          { path: 'guid/pathname', content: '../escaped.txt' },
+          { path: 'guid/asset', content: 'must not be written' },
+        ]);
+
+        await expect(unpackUnityPackage(pkg, outputDir)).rejects.toThrow(
+          'Package pathname is outside the output directory',
+        );
+        expect(fs.existsSync(outsidePath)).toBe(false);
+      });
+
+      it('should not follow a symlink from the output directory', async () => {
+        const pkg = path.join(testDir, 'symlink-path.unitypackage');
+        const outsideDir = path.join(testDir, 'outside');
+        fs.mkdirSync(outputDir, { recursive: true });
+        fs.mkdirSync(outsideDir);
+        fs.symlinkSync(outsideDir, path.join(outputDir, 'Assets'));
+        await createMockUnityPackage(pkg, [
+          { path: 'guid/pathname', content: 'Assets/escaped.txt' },
+          { path: 'guid/asset', content: 'must not be written' },
+        ]);
+
+        await expect(unpackUnityPackage(pkg, outputDir)).rejects.toThrow(
+          'resolves outside the output directory',
+        );
+        expect(fs.existsSync(path.join(outsideDir, 'escaped.txt'))).toBe(false);
+      });
+    });
+
     describe('when formatting file sizes', () => {
       it('should format bytes to MB correctly', () => {
         const sizes = [
